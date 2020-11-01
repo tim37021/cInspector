@@ -42,13 +42,14 @@ def test_hcPeakValley():
     x = np.sin(2*np.pi*441*t)[:2048]
     p, v = pv(x)
     
-    
+    """
     import matplotlib.pyplot as plt
     plt.plot(x)
     plt.scatter(p, x[p])
     plt.scatter(v, x[v])
 
     plt.show()
+    """
 
     assert (np.cos(2*np.pi*441*t[p]) < 1e-4).all(), 'Peak Slope != 0'
 

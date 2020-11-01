@@ -3,3 +3,5 @@ build
 .pytest_cache
 __pycache__
 *.pyd
+*.so
+build_linux
