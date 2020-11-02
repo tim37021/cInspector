@@ -62,7 +62,7 @@ static std::tuple<std::vector<int>, std::vector<int>> hcpeakvelly(py::array_t<T>
 
         if(state) {
             // next peak
-            if(last_index < 0 || last < val) {
+            if(last_index < 0 || last <= val) {
                 last = val;
                 last_index = i;
             }
@@ -72,7 +72,7 @@ static std::tuple<std::vector<int>, std::vector<int>> hcpeakvelly(py::array_t<T>
             }
         } else {
             // next valley
-            if(last_index < 0 || last > val) {
+            if(last_index < 0 || last >= val) {
                 last = val;
                 last_index = i;
             }
@@ -115,7 +115,7 @@ public:
 
             if(m_state) {
                 // next peak
-                if(m_lastIndex < 0 || m_last < val) {
+                if(m_lastIndex < 0 || m_last <= val) {
                     m_last = val;
                     m_lastIndex = m_samples + i;
                 }
@@ -125,7 +125,7 @@ public:
                 }
             } else {
                 // next valley
-                if(m_lastIndex < 0 || m_last > val) {
+                if(m_lastIndex < 0 || m_last >= val) {
                     m_last = val;
                     m_lastIndex = m_samples + i;
                 }

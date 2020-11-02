@@ -74,5 +74,22 @@ def test_hcpeakvalley():
 
     assert (np.cos(2*np.pi*441*t[p]) < 1e-4).all(), 'Peak Slope != 0'
 
+def test_hcpeakvalley_zero():
+    x = np.zeros(2048, dtype=np.float32)
+
+    import matplotlib.pyplot as plt
+    plt.figure()
+    plt.plot(x)
+
+    p, v = cInspector.hcpeakvalley(x)
+
+    plt.scatter(p, x[p])
+    plt.scatter(v, x[v])
+
+    plt.show()
+    
+
+    assert len(v) == 0, 'Zero slope test failed'
+
 if __name__ == '__main__':
-    test_hcpeakvalley()
+    test_hcpeakvalley_zero()
