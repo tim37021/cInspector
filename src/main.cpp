@@ -41,6 +41,53 @@ static py::array_t<float> auto_correlation(py::array_t<float> arr, int min_lag, 
 }
 
 template <class T>
+static std::tuple<std::vector<int>, std::vector<int>> hcpeakvelly(py::array_t<T> arr) {
+    py::buffer_info arr_buf = arr.request(); const T *ptr = reinterpret_cast<const T *>(arr_buf.ptr);
+
+    // check parameters
+    assert(arr_buf.ndim == 1);
+
+    int arr_size = arr_buf.size;
+    int stride = arr_buf.strides[0] / arr_buf.itemsize;
+
+    std::vector<int> peaks;
+    std::vector<int> valleys;
+
+    bool state = false;
+    int last_index = -16;
+    T last;
+
+    for(int i=0; i<arr_size; i++) {
+        T val = ptr[i*stride];
+
+        if(state) {
+            // next peak
+            if(last_index < 0 || last < val) {
+                last = val;
+                last_index = i;
+            }
+            if(i - last_index > 16) {
+                peaks.push_back(last_index);
+                state = false;
+            }
+        } else {
+            // next valley
+            if(last_index < 0 || last > val) {
+                last = val;
+                last_index = i;
+            }
+            if(i - last_index > 16) {
+                valleys.push_back(last_index);
+                state = true;
+            }
+        }
+
+    }
+
+    return std::make_tuple(peaks, valleys);
+}
+
+template <class T>
 class hcPeakValley {
 public:
     hcPeakValley()
@@ -124,6 +171,11 @@ PYBIND11_MODULE(cInspector, m) {
     m.def("auto_correlation", &auto_correlation, R"pbdoc(
         auto-correlation
         Apply auto correlation on given array
+    )pbdoc");
+
+    m.def("hcpeakvalley", &hcpeakvelly<float>, R"pbdoc(
+        hcpeakvelly
+        Apply hcpeakvalley algorithm on given array
     )pbdoc");
 
     py::class_<hcPeakValley<float>>(m, "hcPeakValley")

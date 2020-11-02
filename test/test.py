@@ -40,18 +40,39 @@ def test_hcPeakValley():
     pv = cInspector.hcPeakValley()
     t = np.linspace(0, 1, 44100, dtype=np.float32)
     x = np.sin(2*np.pi*441*t)[:2048]
-    p, v = pv(x)
-    
-    """
+
     import matplotlib.pyplot as plt
+    plt.figure()
     plt.plot(x)
+
+    for i in range(0, len(x), 256):
+        p, v = pv(x[i: i+256])
+        
+        plt.scatter(p, x[p])
+        plt.scatter(v, x[v])
+
+    plt.show()
+    
+
+    assert (np.cos(2*np.pi*441*t[p]) < 1e-4).all(), 'Peak Slope != 0'
+
+def test_hcpeakvalley():
+    t = np.linspace(0, 1, 44100, dtype=np.float32)
+    x = np.sin(2*np.pi*441*t)[:2048]
+
+    import matplotlib.pyplot as plt
+    plt.figure()
+    plt.plot(x)
+
+    p, v = cInspector.hcpeakvalley(x)
+
     plt.scatter(p, x[p])
     plt.scatter(v, x[v])
 
     plt.show()
-    """
+    
 
     assert (np.cos(2*np.pi*441*t[p]) < 1e-4).all(), 'Peak Slope != 0'
 
 if __name__ == '__main__':
-    test_hcPeakValley()
+    test_hcpeakvalley()
