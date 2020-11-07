@@ -41,7 +41,7 @@ static py::array_t<float> auto_correlation(py::array_t<float> arr, int min_lag, 
 }
 
 template <class T>
-static std::tuple<std::vector<int>, std::vector<int>> hcpeakvelly(py::array_t<T> arr) {
+static std::tuple<std::vector<int>, std::vector<int>> hcpeakvelly(py::array_t<T> arr, int base_samples=0) {
     py::buffer_info arr_buf = arr.request(); const T *ptr = reinterpret_cast<const T *>(arr_buf.ptr);
 
     // check parameters
@@ -67,7 +67,7 @@ static std::tuple<std::vector<int>, std::vector<int>> hcpeakvelly(py::array_t<T>
                 last_index = i;
             }
             if(i - last_index > 16) {
-                peaks.push_back(last_index);
+                peaks.push_back(last_index+base_samples);
                 state = false;
             }
         } else {
@@ -77,7 +77,7 @@ static std::tuple<std::vector<int>, std::vector<int>> hcpeakvelly(py::array_t<T>
                 last_index = i;
             }
             if(i - last_index > 16) {
-                valleys.push_back(last_index);
+                valleys.push_back(last_index+base_samples);
                 state = true;
             }
         }
@@ -90,16 +90,13 @@ static std::tuple<std::vector<int>, std::vector<int>> hcpeakvelly(py::array_t<T>
 template <class T>
 class hcPeakValley {
 public:
-    hcPeakValley()
+    hcPeakValley(int baseSamples=0)
     {
-        init();
+        init(baseSamples);
     }
 
     std::tuple<std::vector<int>, std::vector<int>> operator()(py::array_t<T> arr) {
         py::buffer_info arr_buf = arr.request(); const T *ptr = reinterpret_cast<const T *>(arr_buf.ptr);
-
-        
-        
         // check parameters
         assert(arr_buf.ndim == 1);
 
@@ -142,8 +139,8 @@ public:
         return std::make_tuple(peaks, valleys);
     }
 
-    void init() {
-        m_samples = 0;
+    void init(int baseSamples) {
+        m_samples = baseSamples;
         m_lastIndex = -1;
         m_state = false;
     }
@@ -151,6 +148,7 @@ public:
     int samples() const {
         return m_samples;
     }
+
 private:
     int m_samples;
     T m_last;
@@ -176,10 +174,12 @@ PYBIND11_MODULE(cInspector, m) {
     m.def("hcpeakvalley", &hcpeakvelly<float>, R"pbdoc(
         hcpeakvelly
         Apply hcpeakvalley algorithm on given array
-    )pbdoc");
+    )pbdoc",
+    py::arg("arr"),
+    py::arg("base_samples")=0);
 
     py::class_<hcPeakValley<float>>(m, "hcPeakValley")
-        .def(py::init<>())
+        .def(py::init<int>(), py::arg("base_samples")=0)
         .def("__call__", &hcPeakValley<float>::operator())
         .def("init", &hcPeakValley<float>::init)
         .def_property_readonly("samples", &hcPeakValley<float>::samples);
